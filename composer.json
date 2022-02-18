@@ -14,5 +14,7 @@
             "email": "atdhe.boshnjaku@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "automattic/woocommerce": "^3.0"
+    }
 }
