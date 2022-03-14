@@ -7,7 +7,7 @@ External API Products To Woocommerce is a simple plugin that fetches products fr
 Copy files into your wordpress plugins folder and install composer.
 
 ```bash
-composer install
+install the plugin same as you install other plugins and activate, thats about it.
 ```
 
 ## Usage
