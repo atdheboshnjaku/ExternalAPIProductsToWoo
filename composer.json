@@ -1,0 +1,18 @@
+{
+    "name": "atdhe/bb-external-api-to-woo",
+    "description": "Retreiving products from fakestoreapi and adding them to woocommerce automatically",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Inc\\": "inc/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Atdhe Boshnjaku",
+            "email": "atdhe.boshnjaku@gmail.com"
+        }
+    ],
+    "require": {}
+}
