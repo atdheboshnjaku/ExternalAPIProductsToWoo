@@ -56,6 +56,9 @@ class Product
                     update_post_meta($product_id, '_manage_stock', "yes");
                     update_post_meta($product_id, '_stock', $product['rating']['count']);
 
+                    $image_id = $this->upload_image_to_woo($product['image'], $product_id);
+                    update_post_meta($product_id, '_thumbnail_id', $image_id);
+                    
                 } else {
 
                     // Product already exists
@@ -78,39 +81,47 @@ class Product
                 update_post_meta($product_id, '_stock', $product['rating']['count']);
                 update_post_meta($product_id, '_price', $product['price']);                
 
-            }
-
-            // Solution 1 (adds products automatically but no meta data can be added):
-            // $product_array = []; 
-
-            // foreach($products as $product) {
-            //     $product_array[] = [
-            //         'post_title' => $product['title'],
-            //         'post_content' => $product['description'],
-            //         'post_status' => 'pending',
-            //         'post_type' => "product",
-            //     ];
-            // }
-
-            // for ($i=0; $i < count($product_array); $i++) { 
-                
-            //     $post_id = wp_insert_post( $product_array[$i] ); 
-            
-            //     wp_set_object_terms( $post_id, 'simple', 'product_type' ); 
-                
-            // }
-
-            // $post_id = wp_insert_post( array(
-
-            //     'post_title' => $product['title'],
-            //     'post_content' => $product['description'],
-            //     'post_status' => 'pending',
-            //     'post_type' => "product",
-
-            // ));            
+            }          
 
         }
 
+
+    }
+
+    public function upload_image_to_woo($url, $post_id)
+    {
+
+        $image = '';
+        if($url != '') {
+
+            $file = [];
+            $file['name'] = $url;
+            $file['tmp_name'] = download_url($url);
+
+            if(is_wp_error($file['tmp_name'])) {
+
+                @unlink($file['tmp_name']);
+                var_dump( $file['tmp_name']->get_error_messages( ) );
+
+            } else {
+
+                $attachmentId = media_handle_sideload($file, $post_id);
+
+                if( is_wp_error($attachmentId) ) {
+                    
+                    @unlink($file['tmp_name']);
+                    var_dump( $attachmentId->get_error_messages( ) );
+
+                } else {
+
+                    $image = wp_get_attachment_url( $attachmentId );
+
+                }
+
+            }
+
+        }  
+        return $attachmentId;
 
     }
 
