@@ -1,4 +1,4 @@
-# (In Progress: almost ready) External API Products To Woocommerce
+# External API Products To Woocommerce
 
 External API Products To Woocommerce is a simple plugin that fetches products from the [FakeStoreAPI](https://fakestoreapi.com/) and automatically creates/updates Woocommerce products using the Woocommerce API.
 
@@ -26,7 +26,9 @@ Please make sure to update tests as appropriate.
 - [x] Setup plugin using OOP and namespaces
 - [x] Create method to add products from external API
 - [x] Create method to download product images into the media library and assign it to each product as a featured image
-- [ ] Create method to update products if external API products dont match, such as price or stock
+- [x] Create method to update products if external API products dont match, such as price or stock
+- [X] Update code to Woocommerce 3 CRUD
+- [ ] Prevent images from being downloaded if they already exist and are the same
 - [ ] Cleanup, refactor and finalize the plugin
 
 ## License

@@ -1,7 +1,7 @@
 <?php 
 
 // Setting the type declarations and methods return type to strict
-//declare(strict_types = 1);
+declare(strict_types = 1);
 
 namespace Inc;
 
@@ -10,12 +10,12 @@ class Product
 
     public function __construct()
     {
-
+        // Calling the bb_add_products_from_api method as soon as the plugin is activated
         add_action( 'activated_plugin', array($this, 'bb_add_products_from_api') );
 
     }
 
-    public function bb_add_products_from_api()
+    public function bb_add_products_from_api(): void 
     {
 
         // FakestoreAPI products url
@@ -25,77 +25,87 @@ class Product
         $external_products = wp_remote_retrieve_body( wp_remote_get( $url ) );
         $products = json_decode($external_products, true);
 
-        // Solution 2:
-        if(!empty($products)) {
+        if( !empty($products) ) {
 
             foreach($products as $product) {
 
-                //
-                $product_id = wc_get_product_id_by_sku($product['id']);
+                // Checking the SKU 
+                $product_id = wc_get_product_id_by_sku( $product['id'] );
 
-                if( !$product_id ) {
+                // Product does not exist so we create it
+                if( empty($product_id) ) {
 
-                    $post = [
-                        'post_author' => '',
-                        'post_content' => $product['description'],
-                        'post_status' => "publish",
-                        'post_title' => wp_strip_all_tags( $product['title'] ),
-                        'post_name' => $product['title'],
-                        'post_parent' => '',
-                        'post_type' => "product",
-                    ];
+                    $product_id = $this->createOrUpdateProduct( $product );
 
-                    // Create product
-                    $product_id = wp_insert_post( $post );
-
-                    // Set product type
-                    wp_set_object_terms($product_id, 'simple', 'product_type');
-
-                    update_post_meta($product_id, '_sku', $product['id']);
-                    update_post_meta($product_id, '_price', $product['price']);
-                    update_post_meta($product_id, '_manage_stock', "yes");
-                    update_post_meta($product_id, '_stock', $product['rating']['count']);
-
-                    $image_id = $this->upload_image_to_woo($product['image'], $product_id);
-                    update_post_meta($product_id, '_thumbnail_id', $image_id);
-                    
+                // Product exists so we update it
                 } else {
 
-                    // Product already exists
-                    $post = [
-                        'ID' => $product_id,
-                        'post_title' => $product['title'],
-                        'post_content' => $product['description'],
-                    ];
-
-                    $post_id = wp_update_post($post, true);
-                    if(is_wp_error($post_id)) {
-                        $errors = $post_id->get_error_messages();
-                        foreach($errors as $error) {
-                            echo $error;
-                        }
-                    }
+                    $product_id = $this->createOrUpdateProduct( $product, $product_id );
 
                 }
 
-                update_post_meta($product_id, '_stock', $product['rating']['count']);
-                update_post_meta($product_id, '_price', $product['price']);                
-
-            }          
+            }
 
         }
 
+    }
+
+    protected function createOrUpdateProduct(array $product, int $product_id = 0 ): void 
+    {
+
+        // Creating new WooCommerce Product Object
+        $objProduct = new \WC_Product($product_id);
+        $objProduct->set_sku($product['id']);
+        $objProduct->set_name($product['title']);
+        $objProduct->set_description($product['description']);
+        $objProduct->set_regular_price($product['price']);
+
+        // Getting and Setting product category
+        $product_category_id = $this->getProductCategoryID($product['category']);
+        $objProduct->set_category_ids([$product_category_id]);
+        $objProduct->set_manage_stock(true);
+        $objProduct->set_stock_quantity($product['rating']['count']);
+        $objProduct->set_status('publish');
+
+        // Uploading external product image from url to WooCommerce and assigning it as a featured image
+        $image_id = $this->upload_image_to_woo($product['image'], $product_id);
+        $objProduct->set_image_id($image_id);
+
+        // Saving Created/Updated Product
+        $product_id = $objProduct->save();
+        
 
     }
 
-    public function upload_image_to_woo($url, $post_id)
+    protected function getProductCategoryID(string|int $category_name): int
+    {
+
+        // Creating the category and inserting it as a term 
+        $product_category_details = wp_insert_term($category_name, 'product_cat');
+        if( is_wp_error($product_category_details) ) {
+
+            if( $product_category_details->get_error_code() == 'term_exists' ) {
+                $product_category_id = $product_category_details->get_error_data();
+            }
+
+        } else {
+
+            $product_category_id = $product_category_details['term_id'];
+
+        }
+
+        return $product_category_id;
+
+    }
+
+    public function upload_image_to_woo(string $url, int $post_id): int
     {
 
         $image = '';
         if($url != '') {
 
             $file = [];
-            $file['name'] = $url;
+            $file['name'] = $url; // Setting image name based on its URL
             $file['tmp_name'] = download_url($url);
 
             if(is_wp_error($file['tmp_name'])) {
@@ -121,6 +131,7 @@ class Product
             }
 
         }  
+        
         return $attachmentId;
 
     }
