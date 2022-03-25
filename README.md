@@ -29,7 +29,7 @@ Please make sure to update tests as appropriate.
 - [x] Create method to update products if external API products dont match, such as price or stock
 - [X] Update code to Woocommerce 3 CRUD
 - [ ] Prevent images from being downloaded if they already exist and are the same
-- [ ] Cleanup, refactor and finalize the plugin
+- [X] Cleanup, refactor and finalize the plugin
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
